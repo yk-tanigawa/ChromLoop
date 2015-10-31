@@ -1,0 +1,25 @@
+/**
+ * Created by yosuke on 10/31/15.
+ * read a sequence from fasta file
+ */
+class ReadFasta(fname : String) {
+  import scala.io.Source
+  private val s = Source.fromFile(fname)
+  private val buf = new StringBuilder
+
+  var header = ""
+
+  try {
+    for (line <- s.getLines()) {
+      if(line.startsWith(">")){
+        header = line
+      } else {
+        buf.append(line)
+      }
+    }
+  } finally {
+    s.close()
+  }
+
+  def sequence = buf.result()
+}
