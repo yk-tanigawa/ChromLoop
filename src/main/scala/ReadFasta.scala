@@ -1,9 +1,9 @@
+import scala.io.Source
 /**
  * Created by yosuke on 10/31/15.
  * read a sequence from fasta file
  */
 class ReadFasta(fname : String) {
-  import scala.io.Source
   private val s = Source.fromFile(fname)
   private val buf = new StringBuilder
 

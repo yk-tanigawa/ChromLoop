@@ -19,4 +19,7 @@ object ChromLoop extends App{
 
   val bin = new GenomeBins(fasta.sequence, binSize, k - 1)
   println(bin.length)
+
+  val hic = new ReadHiC("./data/GM12878_combined", 21, 1000)
+
 }
