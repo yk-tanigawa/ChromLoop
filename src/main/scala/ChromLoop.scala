@@ -24,4 +24,6 @@ object ChromLoop extends App{
   val hic = new ReadHiC("./data/GM12878_combined", chr, res)
   val m = hic.data(norm, expected, min, max)
 
+
+
 }
