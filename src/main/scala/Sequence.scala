@@ -1,3 +1,5 @@
+import breeze.linalg.DenseMatrix
+
 /**
  * Created by yosuke on 10/30/15.
  * Sequence class is used to store genomic sequence
@@ -14,16 +16,14 @@ class Sequence(s : String) {
   }
 
   def kmerCount(k : Int) = {
-    import breeze.linalg._
-    var c = DenseVector.zeros[Int](1 << (2 * k))
-
+    var c = DenseMatrix.zeros[Int](1 << (2 * k), 1)
     for(i <- 0 until (length - k + 1)){
       var kmer = 0
       for(b <- seq.slice(i, i + k)){
         kmer = kmer << 2
         kmer += b
       }
-      c(kmer) += 1
+      c(kmer, 0) += 1
     }
     c
   }

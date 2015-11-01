@@ -1,4 +1,4 @@
-import breeze.linalg.DenseVector
+import breeze.linalg.DenseMatrix
 
 /**
  * Created by yosuke on 10/31/15.
@@ -19,13 +19,13 @@ class GenomeBins(genomeSequence : String, binSize : Int, overlap : Int = 0) {
 
   def length = bins.length
 
-  def kmerCount(k : Int) : scala.collection.mutable.ArraySeq[Option[DenseVector[Int]]] = {
+  def kmerCount(k : Int) : Array[Option[DenseMatrix[Int]]] = {
     val c = bins.par.map {
       case s: Sequence => Some(s.kmerCount(k))
       case null => None
     }
     println(s"k-mer counting finished")
-    c.seq
+    c.toArray
   }
 
 }

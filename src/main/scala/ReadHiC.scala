@@ -27,7 +27,7 @@ class ReadHiC(datasetPath : String,
   println(s"Start to read Hi-C Data from $path")
 
   /* read raw contact frequency matrix */
-  val data = readObserved(norm, expected, minInterval, maxInterval, res)
+  val data = prepObserved(norm, expected, minInterval, maxInterval, res)
 
   println(s"Hi-C Data is loaded from $path")
 
@@ -35,70 +35,11 @@ class ReadHiC(datasetPath : String,
   def this(fpath : String, chr : Int, res : Int) = {
     this(fpath, s"chr$chr", res)
   }
-/*
-  def data(normMethod : Option[String] = None,
-           expectedMethod : Option[String] = None,
-           minInterval : Int = 0,
-           //maxInterval : Int = Integer.MAX_VALUE) = {
-           maxInterval : Int = Integer.MAX_VALUE) : scala.collection.parallel.mutable.ParArray[Option[(Int, Int, Double)]] = {
 
-    val normv = getNormVector(normMethod)
-    val expectedv = getExpectedVector(expectedMethod)
-
-    val matrix = RAWobserved.map {
-      case (i, j, m) if m.isNaN => None
-      case (i, j, m) if Math.abs(i - j) > maxInterval => None
-      case (i, j, m) if Math.abs(i - j) < minInterval => None
-      case (i : Int, j: Int, m: Double) =>
-        normv match {
-          case Some(norm) =>
-            expectedv match {
-              case Some(expected) => Some((i, j, m / (norm(i / res) * norm(j / res) * expected(Math.abs(i -j) / res))))
-              case None           => Some((i, j, m / (norm(i / res) * norm(j / res))))
-            }
-          case None =>
-            expectedv match {
-              case Some(expected) => Some((i, j, m / expected(Math.abs(i -j) / res)))
-              case None           => Some((i, j, m))
-            }
-        }
-      case _ => throw new Exception("Wrong input in RAW observed file")
-    }
-    println(s"$normMethod normalization and $expectedMethod O/E conversion finished")
-    matrix
-  }
-
-  private def getNormVector(method :Option[String]) : Option[Array[Double]] = {
-    method match {
-      case Some(m) =>
-        m match {
-          case "KR"     => Some(KRnorm)
-          case "VC"     => Some(VCnorm)
-          case "SQRTVC" => Some(SQRTVCnorm)
-          case _ => throw new NormMethodException(m)
-        }
-      case None    => None
-    }
-  }
-
-  private def getExpectedVector(method :Option[String]) : Option[Array[Double]] = {
-    method match {
-      case Some(e) =>
-        e match {
-          case "RAW"    => Some(RAWexpected)
-          case "KR"     => Some(KRexpected)
-          case "VC"     => Some(VCexpected)
-          case "SQRTVC" => Some(SQRTVCexpected)
-          case _ => throw new ExpectedMethodException(e)
-        }
-      case None    => None
-    }
-  }
-**/
-
-  private def readObserved(normVector:Option[Array[Option[Double]]],
+  private def prepObserved(normVector:Option[Array[Option[Double]]],
                            expectedVector:Option[Array[Option[Double]]],
                            minInterval:Int, maxInterval:Int, res:Int) = {
+
     val s = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString(""))
     val buf = scala.collection.mutable.ArrayBuffer.empty[String]
     try {
@@ -106,9 +47,9 @@ class ReadHiC(datasetPath : String,
     } finally {
       s.close()
     }
-    val file = buf.toArray
+    val file = buf.toArray.par
 
-    println("raw read get")
+    println(s"Hi-C: extract Hi-C contact matrix by size: \tmin = $minInterval, \tmax = $maxInterval")
 
     val f_split = (l : String) => l split "\t"
     val f_parse = (a : Array[String]) => {
@@ -122,7 +63,48 @@ class ReadHiC(datasetPath : String,
 
     val filtered = file.map (f_parse compose f_split)
 
-    filtered
+    println(s"Hi-C: normalization and O/E conversion: " +
+            "\tnorm = " + normMethod.getOrElse("None") +
+            ", \texpected = " + expectedMethod.getOrElse("None"))
+
+    val data:scala.collection.parallel.mutable.ParArray[Option[(Int, Int, Double)]] = normVector match {
+      case Some(norm) =>
+        expectedVector match{
+          case Some(expected) =>
+            filtered.map {
+              case Some((i: Int, j: Int, mij: Double)) =>
+                if(norm(i / res).isDefined && norm(j / res).isDefined && expected(Math.abs(i - j) / res).isDefined)
+                  Some((i, j, mij / (norm(i / res).get * norm(j / res).get * expected(Math.abs(i - j) / res).get)))
+                else
+                  None
+              case None => None
+            }
+          case None =>
+            filtered.map {
+              case Some((i: Int, j: Int, mij: Double)) =>
+                if(norm(i / res).isDefined && norm(j / res).isDefined)
+                  Some((i, j, mij / (norm(i / res).get * norm(j / res).get)))
+                else
+                  None
+              case None => None
+            }
+        }
+      case None =>
+        expectedVector match{
+          case Some(expected) =>
+            filtered.map {
+              case Some((i: Int, j: Int, mij: Double)) =>
+                if(expected(Math.abs(i - j) / res).isDefined)
+                  Some((i, j, mij / expected(Math.abs(i - j) / res).get))
+                else
+                  None
+              case None => None
+            }
+          case None => filtered
+        }
+    }
+
+    data
   }
 
   private def read(method : String, dataType : String) = {

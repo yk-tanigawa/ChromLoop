@@ -1,3 +1,5 @@
+import breeze.linalg._
+
 /**
  * Created by yosuke on 10/31/15.
  * main function
@@ -12,7 +14,7 @@ object ChromLoop extends App{
   val binSize = res
   val norm = Option("KR")
   val expected = Option("KR")
-  val min = 0
+  val min = 1000
   val max = 1000000
 
   /* Genome */
@@ -22,8 +24,31 @@ object ChromLoop extends App{
 
   /* Hi-C */
   val hic = new ReadHiC("./data/GM12878_combined", s"chr$chr", res, norm, expected, min, max)
-  //val m = hic.data(norm, expected, min, max)
 
 
+  val qsub:scala.collection.parallel.mutable.ParArray[Option[DenseMatrix[Double]]] = hic.data.map {
+    case Some((i, j, m)) =>
+      if(countVector(i / res).isDefined && countVector(j / res).isDefined)
+        Some(DenseMatrix((countVector(i / res).get * countVector(j / res).get.t).copy.data.map {i: Int => i.toDouble}).t * m)
+      else
+        None
+    case None => None
+  }
+  println("q -- finish")
+
+  val Psub:scala.collection.parallel.mutable.ParArray[Option[DenseMatrix[Int]]] = hic.data.map {
+    case Some((i, j, m)) =>
+      if(countVector(i / res).isDefined && countVector(j / res).isDefined){
+        val dij = DenseMatrix((countVector(i / res).get * countVector(j / res).get.t).copy.data).t
+        Some(dij * dij.t)
+      }else {
+        None
+      }
+    case None => None
+  }
+
+
+  println("P -- finish")
+//  println(qsub)
 
 }
