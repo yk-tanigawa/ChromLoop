@@ -20,12 +20,7 @@ class ReadHiC(datasetPath : String, chr : String, res : Int) {
   /* read raw contact frequency matrix */
   private val RAWobserved = readRawObserved
 
-  println(path)
-  println(chr)
-  println(res2resstr(res))
-
-  println(KRnorm.length)
-
+  println(s"Hi-C Data is loaded from $path")
 
 
   def this(fpath : String, chr : Int, res : Int) = {
@@ -36,7 +31,7 @@ class ReadHiC(datasetPath : String, chr : String, res : Int) {
            expectedMethod : Option[String] = None,
            minInterval : Int = 0,
            //maxInterval : Int = Integer.MAX_VALUE) = {
-           maxInterval : Int = Integer.MAX_VALUE) : Array[Option[(Int, Int, Double)]] = {
+           maxInterval : Int = Integer.MAX_VALUE) : scala.collection.parallel.mutable.ParArray[Option[(Int, Int, Double)]] = {
 
     val normv = getNormVector(normMethod)
     val expectedv = getExpectedVector(expectedMethod)
@@ -102,7 +97,7 @@ class ReadHiC(datasetPath : String, chr : String, res : Int) {
     } finally {
       f.close()
     }
-    buf.toArray
+    buf.toArray.par
   }
 
   private def read(method : String, dataType : String) = {

@@ -13,6 +13,7 @@ class GenomeBins(genomeSequence : String, binSize : Int, overlap : Int = 0) {
     }
   }
 
+  println(s"Genome sequence is now devided into $length bins")
 
   def length = bins.length
 }
