@@ -15,7 +15,7 @@ class ReadHiC(datasetPath : String, chr : String, res : Int) {
   private val RAWexpected = readExpected("RAW")
   private val KRexpected = readExpected("KR")
   private val VCexpected = readExpected("VC")
-  private val SQRTexpected = readExpected("SQRTVC")
+  private val SQRTVCexpected = readExpected("SQRTVC")
 
   /* read raw contact frequency matrix */
   private val RAWobserved = readRawObserved
@@ -26,9 +26,70 @@ class ReadHiC(datasetPath : String, chr : String, res : Int) {
 
   println(KRnorm.length)
 
+
+
   def this(fpath : String, chr : Int, res : Int) = {
     this(fpath, s"chr$chr", res)
   }
+
+  def data(normMethod : Option[String] = None,
+           expectedMethod : Option[String] = None,
+           minInterval : Int = 0,
+           //maxInterval : Int = Integer.MAX_VALUE) = {
+           maxInterval : Int = Integer.MAX_VALUE) : Array[Option[(Int, Int, Double)]] = {
+
+    val normv = getNormVector(normMethod)
+    val expectedv = getExpectedVector(expectedMethod)
+
+    RAWobserved.map {
+      case (i, j, m) if m.isNaN => None
+      case (i, j, m) if Math.abs(i - j) > maxInterval => None
+      case (i, j, m) if Math.abs(i - j) < minInterval => None
+      case (i : Int, j: Int, m: Double) =>
+        normv match {
+          case Some(norm) =>
+            expectedv match {
+              case Some(expected) => Some((i, j, m / (norm(i / res) * norm(j / res) * expected(Math.abs(i -j) / res))))
+              case None           => Some((i, j, m / (norm(i / res) * norm(j / res))))
+            }
+          case None =>
+            expectedv match {
+              case Some(expected) => Some((i, j, m / expected(Math.abs(i -j) / res)))
+              case None           => Some((i, j, m))
+            }
+        }
+      case _ => throw new Exception("Wrong input in RAW observed file")
+    }
+
+  }
+
+  private def getNormVector(method :Option[String]) : Option[Array[Double]] = {
+    method match {
+      case Some(m) =>
+        m match {
+          case "KR"     => Some(KRnorm)
+          case "VC"     => Some(VCnorm)
+          case "SQRTVC" => Some(SQRTVCnorm)
+          case _ => throw new NormMethodException(m)
+        }
+      case None    => None
+    }
+  }
+
+  private def getExpectedVector(method :Option[String]) : Option[Array[Double]] = {
+    method match {
+      case Some(e) =>
+        e match {
+          case "RAW"    => Some(RAWexpected)
+          case "KR"     => Some(KRexpected)
+          case "VC"     => Some(VCexpected)
+          case "SQRTVC" => Some(SQRTVCexpected)
+          case _ => throw new ExpectedMethodException(e)
+        }
+      case None    => None
+    }
+  }
+
 
   private def readRawObserved = {
     val f = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString(""))

@@ -21,5 +21,7 @@ object ChromLoop extends App{
   println(bin.length)
 
   val hic = new ReadHiC("./data/GM12878_combined", 21, 1000)
+  hic.data()
+  hic.data(Option("KR"))
 
 }
