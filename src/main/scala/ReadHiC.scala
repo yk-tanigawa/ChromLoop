@@ -36,7 +36,7 @@ class ReadHiC(datasetPath : String, chr : String, res : Int) {
     val normv = getNormVector(normMethod)
     val expectedv = getExpectedVector(expectedMethod)
 
-    RAWobserved.map {
+    val matrix = RAWobserved.map {
       case (i, j, m) if m.isNaN => None
       case (i, j, m) if Math.abs(i - j) > maxInterval => None
       case (i, j, m) if Math.abs(i - j) < minInterval => None
@@ -55,7 +55,8 @@ class ReadHiC(datasetPath : String, chr : String, res : Int) {
         }
       case _ => throw new Exception("Wrong input in RAW observed file")
     }
-
+    println(s"$normMethod normalization and $expectedMethod O/E conversion finished")
+    matrix
   }
 
   private def getNormVector(method :Option[String]) : Option[Array[Double]] = {
