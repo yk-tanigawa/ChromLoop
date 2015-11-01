@@ -21,8 +21,8 @@ object ChromLoop extends App{
   val countVector = bin.kmerCount(k)
 
   /* Hi-C */
-  val hic = new ReadHiC("./data/GM12878_combined", chr, res)
-  val m = hic.data(norm, expected, min, max)
+  val hic = new ReadHiC("./data/GM12878_combined", s"chr$chr", res, norm, expected, min, max)
+  //val m = hic.data(norm, expected, min, max)
 
 
 

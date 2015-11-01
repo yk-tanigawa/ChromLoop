@@ -3,22 +3,29 @@ import scala.io.Source
  * Created by yosuke on 11/1/15.
  * read HiC data from File
  */
-class ReadHiC(datasetPath : String, chr : String, res : Int) {
+class ReadHiC(datasetPath : String,
+              chr : String,
+              res : Int,
+              normMethod : Option[String] = None,
+              expectedMethod : Option[String] = None,
+              minInterval : Int = 0,
+              maxInterval : Int = Integer.MAX_VALUE) {
+
   private val path = Array(datasetPath, res2resstr(res) + "_resolution_intrachromosomal", chr, "MAPQGE30").mkString("/")
 
-  /* read various normalize vectors*/
-  private val KRnorm = readNorm("KR")
-  private val VCnorm = readNorm("VC")
-  private val SQRTVCnorm = readNorm("SQRTVC")
+  /* read normalize vector if necessary */
+  val norm:Option[Array[Option[Double]]] = normMethod match {
+    case Some(n) => Some(readNorm(n))
+    case None => None
+  }
 
-  /* read various expectation values*/
-  private val RAWexpected = readExpected("RAW")
-  private val KRexpected = readExpected("KR")
-  private val VCexpected = readExpected("VC")
-  private val SQRTVCexpected = readExpected("SQRTVC")
+  val expected:Option[Array[Option[Double]]] = expectedMethod match {
+    case Some(e) => Some(readExpected(e))
+    case None => None
+  }
 
   /* read raw contact frequency matrix */
-  private val RAWobserved = readRawObserved
+  val data = readObserved(norm, expected, minInterval, maxInterval, res)
 
   println(s"Hi-C Data is loaded from $path")
 
@@ -26,7 +33,7 @@ class ReadHiC(datasetPath : String, chr : String, res : Int) {
   def this(fpath : String, chr : Int, res : Int) = {
     this(fpath, s"chr$chr", res)
   }
-
+/*
   def data(normMethod : Option[String] = None,
            expectedMethod : Option[String] = None,
            minInterval : Int = 0,
@@ -85,34 +92,34 @@ class ReadHiC(datasetPath : String, chr : String, res : Int) {
       case None    => None
     }
   }
+**/
 
+  private def readObserved(normVector:Option[Array[Option[Double]]],
+                           expectedVector:Option[Array[Option[Double]]],
+                           minInterval:Int, maxInterval:Int, res:Int) = {
+    val file = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString("")).getLines().toArray.par
 
-  private def readRawObserved = {
-    val f = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString(""))
-    val buf = scala.collection.mutable.ArrayBuffer.empty[(Int, Int, Double)]
-    try{
-      for (line <- f.getLines()) {
-        val lineElements = line split "\t"
-        buf.append((lineElements(0).toInt, lineElements(1).toInt, lineElements(2).toDouble))
-      }
-    } finally {
-      f.close()
+    val f_split = (l : String) => l split "\t"
+    val f_parse = (a : Array[String]) => {
+      if(a(2).toDouble.isNaN ||
+        Math.abs(a(0).toInt - a(1).toInt) > maxInterval ||
+        Math.abs(a(0).toInt - a(1).toInt) < minInterval)
+        None
+      else
+        Some((a(0).toInt, a(1).toInt, a(2).toDouble))
     }
-    buf.toArray.par
+
+    val filtered = file.map (f_parse compose f_split)
+
+    filtered
   }
 
   private def read(method : String, dataType : String) = {
     /* read normalization vector / expected value */
-    val f = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".", method, dataType).mkString(""))
-    val buf = scala.collection.mutable.ArrayBuffer.empty[Double]
-    try{
-      for (line <- f.getLines()) {
-        buf.append(line.toDouble)
-      }
-    } finally {
-      f.close()
-    }
-    buf.toArray
+    val file = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".", method, dataType).mkString("")).getLines().toArray
+    val f_convert = (l: String) => if(l.toDouble.isNaN) None else Some(l.toDouble)
+    val vector = file.map{f_convert}
+    vector
   }
 
   private def readNorm(method : String) = read(method, "norm")
