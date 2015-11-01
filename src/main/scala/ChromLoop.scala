@@ -1,3 +1,4 @@
+import java.io.PrintWriter
 import breeze.linalg._
 
 /**
@@ -26,29 +27,41 @@ object ChromLoop extends App{
   val hic = new ReadHiC("./data/GM12878_combined", s"chr$chr", res, norm, expected, min, max)
 
 
-  val qsub:scala.collection.parallel.mutable.ParArray[Option[DenseMatrix[Double]]] = hic.data.map {
+  val q = DenseMatrix.zeros[Double](1 << (4 * k), 1)
+  hic.data.foreach {
     case Some((i, j, m)) =>
       if(countVector(i / res).isDefined && countVector(j / res).isDefined)
-        Some(DenseMatrix((countVector(i / res).get * countVector(j / res).get.t).copy.data.map {i: Int => i.toDouble}).t * m)
+        q += DenseMatrix((countVector(i / res).get * countVector(j / res).get.t).copy.data.map { i: Int => i.toDouble }).t * m
       else
         None
     case None => None
   }
+
+  println(q.t)
+  writeToFile(q, "./tmp/q.out")
   println("q -- finish")
 
-  val Psub:scala.collection.parallel.mutable.ParArray[Option[DenseMatrix[Int]]] = hic.data.map {
+
+  val P = DenseMatrix.zeros[Double](1 << (4 * k), 1 << (4 * k))
+  hic.data.foreach{
     case Some((i, j, m)) =>
       if(countVector(i / res).isDefined && countVector(j / res).isDefined){
-        val dij = DenseMatrix((countVector(i / res).get * countVector(j / res).get.t).copy.data).t
-        Some(dij * dij.t)
-      }else {
+        val dij = DenseMatrix((countVector(i / res).get * countVector(j / res).get.t).copy.data.map { i: Int => i.toDouble }).t * (1.0 / (binSize + k - 1))
+        P += dij * dij.t
+      }else
         None
-      }
     case None => None
   }
 
-
+  writeToFile(P, "./tmp/P.out")
   println("P -- finish")
-//  println(qsub)
 
+  def writeToFile(m : DenseMatrix[Double], filename : String){
+    val file = new PrintWriter(filename)
+    val nrow:Int = m.rows
+    val ncol:Int = m.cols
+    file.write(s"$nrow\t$ncol\n")
+    m.copy.data.foreach(f => file.write(s"$f\n"))
+    file.close()
+  }
 }
