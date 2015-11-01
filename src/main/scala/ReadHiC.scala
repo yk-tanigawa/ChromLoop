@@ -24,6 +24,8 @@ class ReadHiC(datasetPath : String,
     case None => None
   }
 
+  println(s"Start to read Hi-C Data from $path")
+
   /* read raw contact frequency matrix */
   val data = readObserved(norm, expected, minInterval, maxInterval, res)
 
@@ -97,7 +99,16 @@ class ReadHiC(datasetPath : String,
   private def readObserved(normVector:Option[Array[Option[Double]]],
                            expectedVector:Option[Array[Option[Double]]],
                            minInterval:Int, maxInterval:Int, res:Int) = {
-    val file = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString("")).getLines().toArray.par
+    val s = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString(""))
+    val buf = scala.collection.mutable.ArrayBuffer.empty[String]
+    try {
+      for (line <- s.getLines()) buf.append(line)
+    } finally {
+      s.close()
+    }
+    val file = buf.toArray
+
+    println("raw read get")
 
     val f_split = (l : String) => l split "\t"
     val f_parse = (a : Array[String]) => {
