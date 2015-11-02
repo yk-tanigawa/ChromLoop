@@ -2,7 +2,11 @@ name := "ChromLoop"
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.10.7"
+
+val buildSettings = Defaults.defaultSettings ++ Seq(
+  javaOptions += "-Xms2G -Xmx10G"
+)
 
 libraryDependencies  ++= Seq(
   // other dependencies here
