@@ -35,91 +35,6 @@ class ReadHiC(datasetPath : String,
   val resolution = res
 
 
-
-  //val data = prepObserved(norm, expected, minInterval, maxInterval, res)
-
-
-/*
-  private def prepObserved(normVector:Option[Array[Option[Double]]],
-                           expectedVector:Option[Array[Option[Double]]],
-                           minInterval:Int, maxInterval:Int, res:Int) = {
-
-
-    private def getFileName(path: String, chr:String, res:Int): Unit ={
-      Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString("")
-    }
-    val fileName = getFileName(path, chr, res)
-
-
-    val reader = new BufferedReader( new FileReader( new File (fileName)))
-    var line:String = null
-
-    val buf = scala.collection.mutable.ArrayBuffer.empty[String]
-
-    while( { line = reader.readLine; line != null}){
-      buf.append(line)
-    }
-    reader.close()
-    val file = buf.toArray.par
-
-    println(s"Hi-C: extract Hi-C contact matrix by size: \tmin = $minInterval, \tmax = $maxInterval")
-
-    val f_split = (l : String) => l split "\t"
-    val f_parse = (a : Array[String]) => {
-      if(a(2).toDouble.isNaN ||
-        Math.abs(a(0).toInt - a(1).toInt) > maxInterval ||
-        Math.abs(a(0).toInt - a(1).toInt) < minInterval)
-        None
-      else
-        Some((a(0).toInt, a(1).toInt, a(2).toDouble))
-    }
-
-    val filtered = file.map (f_parse compose f_split)
-
-    println(s"Hi-C: normalization and O/E conversion: " +
-            "\tnorm = " + normMethod.getOrElse("None") +
-            ", \texpected = " + expectedMethod.getOrElse("None"))
-
-    val data:scala.collection.parallel.mutable.ParArray[Option[(Int, Int, Double)]] = normVector match {
-      case Some(norm) =>
-        expectedVector match{
-          case Some(expected) =>
-            filtered.map {
-              case Some((i: Int, j: Int, mij: Double)) =>
-                if(norm(i / res).isDefined && norm(j / res).isDefined && expected(Math.abs(i - j) / res).isDefined)
-                  Some((i, j, mij / (norm(i / res).get * norm(j / res).get * expected(Math.abs(i - j) / res).get)))
-                else
-                  None
-              case None => None
-            }
-          case None =>
-            filtered.map {
-              case Some((i: Int, j: Int, mij: Double)) =>
-                if(norm(i / res).isDefined && norm(j / res).isDefined)
-                  Some((i, j, mij / (norm(i / res).get * norm(j / res).get)))
-                else
-                  None
-              case None => None
-            }
-        }
-      case None =>
-        expectedVector match{
-          case Some(expected) =>
-            filtered.map {
-              case Some((i: Int, j: Int, mij: Double)) =>
-                if(expected(Math.abs(i - j) / res).isDefined)
-                  Some((i, j, mij / expected(Math.abs(i - j) / res).get))
-                else
-                  None
-              case None => None
-            }
-          case None => filtered
-        }
-    }
-
-    data
-  }
-*/
   private def read(method : String, dataType : String) = {
     /* read normalization vector / expected value */
     val file = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".", method, dataType).mkString("")).getLines().toArray
@@ -130,13 +45,13 @@ class ReadHiC(datasetPath : String,
 
   private def readNorm(method : String) = {
     val norm = read(method, "norm")
-    println(s"Hi-C Normalize vector [$method] is loaded")
+    println(s"\tHi-C Normalize vector [$method] is loaded")
     norm
   }
 
   private def readExpected(method : String) = {
     val expected = read(method, "expected")
-    println(s"Hi-C expected value vector [$method] is loaded")
+    println(s"\tHi-C expected value vector [$method] is loaded")
     expected
   }
 
@@ -156,14 +71,14 @@ class ReadHiC(datasetPath : String,
 
   private def res2resstr(res : Int) : String = {
     res match {
-      case 1000    => "1kb"
-      case 5000    => "5kb"
-      case 10000   => "10kb"
-      case 25000   => "25kb"
-      case 50000   => "50kb"
-      case 100000  => "100kb"
-      case 250000  => "250kb"
-      case 500000  => "500kb"
+      case 1000 => "1kb"
+      case 5000 => "5kb"
+      case 10000 => "10kb"
+      case 25000 => "25kb"
+      case 50000 => "50kb"
+      case 100000 => "100kb"
+      case 250000 => "250kb"
+      case 500000 => "500kb"
       case 1000000 => "1Mb"
       case _ => throw new ResSizeException(res)
     }

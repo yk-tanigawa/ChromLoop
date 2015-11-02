@@ -22,4 +22,5 @@ class ReadFasta(fname : String) {
   }
 
   def sequence = buf.result()
+  def length = sequence.length
 }
