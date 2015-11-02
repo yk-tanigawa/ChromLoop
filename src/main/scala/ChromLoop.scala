@@ -10,6 +10,9 @@ object ChromLoop extends App {
 
   putLog("----- welcome to ChromLoop -----")
 
+  /**
+   * parameters
+   */
   val k = 3
   val chr = 21
   val res = 1000
@@ -20,6 +23,9 @@ object ChromLoop extends App {
   val dataSeq = "./data/GRCh37.ch21.fasta"
   val dataHiC = "./data/GM12878_combined"
 
+  /**
+   * some variables
+   */
   val binSize = res
   val qfile = s"./tmp/res$res.k$k.chr$chr.q.out"
   val Pfile = s"./tmp/res$res.k$k.chr$chr.P.out"
