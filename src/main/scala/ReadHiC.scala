@@ -9,9 +9,10 @@ class ReadHiC(datasetPath : String,
               chr : String,
               res : Int,
               normMethod : Option[String] = None,
-              expectedMethod : Option[String] = None,
-              minInterval : Int = 0,
-              maxInterval : Int = Integer.MAX_VALUE) {
+              expectedMethod : Option[String] = None){
+  def this(fpath : String, chr : Int, res : Int) = {
+    this(fpath, s"chr$chr", res)
+  }
 
   private val path = Array(datasetPath, res2resstr(res) + "_resolution_intrachromosomal", chr, "MAPQGE30").mkString("/")
 
@@ -26,26 +27,31 @@ class ReadHiC(datasetPath : String,
     case None => None
   }
 
-  println(s"Start to read Hi-C Data from $path")
 
   /* read raw contact frequency matrix */
-  val data = prepObserved(norm, expected, minInterval, maxInterval, res)
+  val rawData = readRawData()
 
-  println(s"Hi-C Data is loaded from $path")
+  val length = rawData.length
+  val resolution = res
 
 
-  def this(fpath : String, chr : Int, res : Int) = {
-    this(fpath, s"chr$chr", res)
-  }
 
+  //val data = prepObserved(norm, expected, minInterval, maxInterval, res)
+
+
+/*
   private def prepObserved(normVector:Option[Array[Option[Double]]],
                            expectedVector:Option[Array[Option[Double]]],
                            minInterval:Int, maxInterval:Int, res:Int) = {
 
 
-    val fileName = Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString("")
+    private def getFileName(path: String, chr:String, res:Int): Unit ={
+      Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString("")
+    }
+    val fileName = getFileName(path, chr, res)
 
-    var reader = new BufferedReader( new FileReader( new File (fileName)))
+
+    val reader = new BufferedReader( new FileReader( new File (fileName)))
     var line:String = null
 
     val buf = scala.collection.mutable.ArrayBuffer.empty[String]
@@ -113,7 +119,7 @@ class ReadHiC(datasetPath : String,
 
     data
   }
-
+*/
   private def read(method : String, dataType : String) = {
     /* read normalization vector / expected value */
     val file = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".", method, dataType).mkString("")).getLines().toArray
@@ -122,9 +128,31 @@ class ReadHiC(datasetPath : String,
     vector
   }
 
-  private def readNorm(method : String) = read(method, "norm")
+  private def readNorm(method : String) = {
+    val norm = read(method, "norm")
+    println(s"Hi-C Normalize vector [$method] is loaded")
+    norm
+  }
 
-  private def readExpected(method : String) = read(method, "expected")
+  private def readExpected(method : String) = {
+    val expected = read(method, "expected")
+    println(s"Hi-C expected value vector [$method] is loaded")
+    expected
+  }
+
+  /* read RAWobserved data from file */
+  private def readRawData() = {
+    val rawDataFileName = Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString("")
+    val reader = new BufferedReader( new FileReader( new File (rawDataFileName)))
+    var line:String = null
+    val buf = scala.collection.mutable.ArrayBuffer.empty[String]
+    while( { line = reader.readLine; line != null}){
+      buf.append(line)
+    }
+    reader.close()
+    val rawData = buf.toArray.par
+    rawData
+  }
 
   private def res2resstr(res : Int) : String = {
     res match {

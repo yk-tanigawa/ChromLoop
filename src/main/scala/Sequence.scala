@@ -16,7 +16,7 @@ class Sequence(s : String) {
   }
 
   def kmerCount(k : Int) = {
-    var c = DenseMatrix.zeros[Int](1 << (2 * k), 1)
+    val c = DenseMatrix.zeros[Double](1 << (2 * k), 1)
     for(i <- 0 until (length - k + 1)){
       var kmer = 0
       for(b <- seq.slice(i, i + k)){

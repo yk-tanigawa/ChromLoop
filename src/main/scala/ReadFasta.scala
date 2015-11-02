@@ -21,7 +21,5 @@ class ReadFasta(fname : String) {
     s.close()
   }
 
-  println(s"Genome sequence file is loaded from $fname")
-
   def sequence = buf.result()
 }
