@@ -4,9 +4,8 @@ version := "1.0"
 
 scalaVersion := "2.11.7"
 
-val buildSettings = Defaults.defaultSettings ++ Seq(
-  javaOptions += "-Xms2G -Xmx10G"
-)
+//val buildSettings = Defaults.defaultSettings ++ Seq(javaOptions += "-Xms2G -Xmx10G")
+// invalid
 
 libraryDependencies  ++= Seq(
   // other dependencies here

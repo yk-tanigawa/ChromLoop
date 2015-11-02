@@ -30,10 +30,15 @@ object ChromLoop extends App{
   val q = DenseMatrix.zeros[Double](1 << (4 * k), 1)
   hic.data.foreach {
     case Some((i, j, m)) =>
-      if(countVector(i / res).isDefined && countVector(j / res).isDefined)
-        q += DenseMatrix((countVector(i / res).get * countVector(j / res).get.t).copy.data.map { i: Int => i.toDouble }).t * m
-      else
-        None
+      try {
+        if (countVector(i / res).isDefined && countVector(j / res).isDefined)
+          q += DenseMatrix((countVector(i / res).get * countVector(j / res).get.t).copy.data.map { i: Int => i.toDouble }).t * m
+        else
+          None
+      }catch {
+        case e: ArrayIndexOutOfBoundsException =>
+          println(s"i = $i\tj = $j\tres = $res\tlength(countVector) = " + countVector.length)
+      }
     case None => None
   }
 
