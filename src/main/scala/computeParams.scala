@@ -25,8 +25,8 @@ class computeParams(hiC: ReadHiC,
   private val f_normalize: Option[(Int, Int, Double)] => Option[(Int, Int, Double)] = {
     case Some((i, j, m)) => {
       if (m.isNaN ||
-        Math.abs(i - j) > maxInterval ||
-        Math.abs(i - j) < minInterval ||
+        Math.abs(i - j) > (maxInterval / hiC.resolution) ||
+        Math.abs(i - j) < (minInterval / hiC.resolution) ||
         featureVector(i).isEmpty ||
         featureVector(j).isEmpty ||
         (hiC.norm.isDefined && (hiC.norm.get(i).isEmpty || hiC.norm.get(j).isEmpty)) ||
