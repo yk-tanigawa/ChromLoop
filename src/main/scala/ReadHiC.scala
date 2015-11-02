@@ -56,18 +56,6 @@ class ReadHiC(datasetPath : String,
     reader.close()
     val file = buf.toArray.par
 
-    /*
-    val s = Source.fromFile(fileName)
-    val buf = scala.collection.mutable.ArrayBuffer.empty[String]
-    try {
-      for (line <- s.getLines()) buf.append(line)
-    } finally {
-      s.close()
-    }
-    val file = buf.toArray.par
-    */
-
-
     println(s"Hi-C: extract Hi-C contact matrix by size: \tmin = $minInterval, \tmax = $maxInterval")
 
     val f_split = (l : String) => l split "\t"
