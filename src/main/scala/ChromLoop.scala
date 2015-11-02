@@ -27,8 +27,6 @@ object ChromLoop extends App {
    * some variables
    */
   val binSize = res
-  val qfile = s"./tmp/res$res.k$k.chr$chr.q.out"
-  val Pfile = s"./tmp/res$res.k$k.chr$chr.P.out"
 
   /* Genome */
   val fasta = new ReadFasta(dataSeq)
@@ -44,6 +42,10 @@ object ChromLoop extends App {
 
 
   val params = new computeParams(hic, countVector, k, binSize, min, max)
+
+  val qfile = s"./tmp/res$res.k$k.chr$chr." + hic.length + ".q.out"
+  val Pfile = s"./tmp/res$res.k$k.chr$chr." + hic.length + ".P.out"
+
   writeToFile(params.q, qfile)
   writeToFile(params.P, Pfile)
   putLog("computation complete:\tq : " + qfile + " \tP : " + Pfile)
