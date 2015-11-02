@@ -19,7 +19,7 @@ object ChromLoop extends App{
   val max = 1000000
 
   /* Genome */
-  val fasta = new ReadFasta("./data/GRCh38.p2.ch21.fasta")
+  val fasta = new ReadFasta("./data/GRCh37.ch21.fasta")
   val bin = new GenomeBins(fasta.sequence, binSize, k - 1)
   val countVector = bin.kmerCount(k)
 
