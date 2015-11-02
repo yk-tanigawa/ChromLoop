@@ -40,15 +40,21 @@ object ChromLoop extends App {
   val hic = new ReadHiC(dataHiC, s"chr$chr", res, norm, expected)
   putLog(s"Hi-C Data is loaded from " + dataHiC + " \tlength = " + hic.length)
 
+  val time_start = System.currentTimeMillis();
 
   val params = new computeParams(hic, countVector, k, binSize, min, max)
+
+  val time_end = System.currentTimeMillis();
+  val time = time_end - time_start
 
   val qfile = s"./tmp/res$res.k$k.chr$chr." + hic.length + ".q.out"
   val Pfile = s"./tmp/res$res.k$k.chr$chr." + hic.length + ".P.out"
 
   writeToFile(params.q, qfile)
   writeToFile(params.P, Pfile)
+
   putLog("computation complete:\tq : " + qfile + " \tP : " + Pfile)
+  putLog(s"$time msec")
 
 
   def writeToFile(m : DenseMatrix[Double], filename : String){
