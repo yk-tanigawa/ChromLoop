@@ -1,4 +1,6 @@
 import scala.io.Source
+import java.io.{File, FileReader, BufferedReader}
+
 /**
  * Created by yosuke on 11/1/15.
  * read HiC data from File
@@ -40,7 +42,22 @@ class ReadHiC(datasetPath : String,
                            expectedVector:Option[Array[Option[Double]]],
                            minInterval:Int, maxInterval:Int, res:Int) = {
 
-    val s = Source.fromFile(Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString(""))
+
+    val fileName = Array(path, "/", chr, "_", res2resstr(res), ".RAWobserved").mkString("")
+
+    var reader = new BufferedReader( new FileReader( new File (fileName)))
+    var line:String = null
+
+    val buf = scala.collection.mutable.ArrayBuffer.empty[String]
+
+    while( { line = reader.readLine; line != null}){
+      buf.append(line)
+    }
+    reader.close()
+    val file = buf.toArray.par
+
+    /*
+    val s = Source.fromFile(fileName)
     val buf = scala.collection.mutable.ArrayBuffer.empty[String]
     try {
       for (line <- s.getLines()) buf.append(line)
@@ -48,6 +65,8 @@ class ReadHiC(datasetPath : String,
       s.close()
     }
     val file = buf.toArray.par
+    */
+
 
     println(s"Hi-C: extract Hi-C contact matrix by size: \tmin = $minInterval, \tmax = $maxInterval")
 
